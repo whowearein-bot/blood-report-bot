@@ -7,7 +7,7 @@ app = Flask(__name__)
 # Setup OpenAI client for OpenRouter
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key="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"
+    api_key="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"
 )
 
 # Clean unwanted tags like <think>
@@ -22,14 +22,25 @@ def is_medical_query(text):
     ]
     return any(word in text.lower() for word in keywords)
 
+# Sanitize and validate input
+def sanitize_input(user_input):
+    # Remove control characters and excessive whitespace
+    sanitized = re.sub(r'[\x00-\x1f\x7f]', '', user_input).strip()
+    # Optional: block potentially dangerous characters
+    if any(char in sanitized for char in ['<', '>', '{', '}', '[', ']']):
+        return None
+    return sanitized if 0 < len(sanitized) <= 500 else None
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     response_text = ""
     if request.method == 'POST':
-        user_input = request.form['prompt']
-        
-        # Optional filter
-        if not is_medical_query(user_input):
+        raw_input = request.form['prompt']
+        user_input = sanitize_input(raw_input)
+
+        if not user_input:
+            response_text = "❌ Please enter a valid medical question (1–500 characters, no special characters like < >)."
+        elif not is_medical_query(user_input):
             response_text = "❌ This assistant only responds to medical questions related to health and blood reports."
         else:
             try:
@@ -55,8 +66,9 @@ def index():
                 response_text = clean_response(raw_text)
             except Exception as e:
                 response_text = f"❌ Error: {str(e)}"
-    
+
     return render_template('index.html', response=response_text)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
