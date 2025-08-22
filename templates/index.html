@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Medical Chatbot</title>
+</head>
+
+<body>
+    <h2>Medical Assistant - Blood Report Chat</h2>
+    <form method="post">
+        <textarea name="prompt" rows="4" cols="60"
+            placeholder="Ask about blood reports, symptoms, or health..."></textarea><br>
+        <button type="submit">Ask</button>
+    </form>
+
+    {% if response %}
+    <h3>Response:</h3>
+    <p>{{ response }}</p>
+    {% endif %}
+</body>
+
+</html>
